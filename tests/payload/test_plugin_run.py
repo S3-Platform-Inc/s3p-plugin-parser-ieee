@@ -13,7 +13,7 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.ie.webdriver import WebDriver
 
 from tests.config.fixtures import fix_plugin_config, project_config
-from tests.payload.fixtures import execute_timeout
+# from tests.payload.fixtures import execute_timeout
 from s3p_sdk.types import S3PRefer, S3PDocument, S3PPlugin
 from s3p_sdk.plugin.types import SOURCE
 
@@ -60,14 +60,16 @@ class TestPayloadRun:
         assert issubclass(parser_class, S3PParserBase), f"{class_name} is not a subclass of S3PParserBase."
         return parser_class
 
-    def run_payload(self, payload: Type[S3PParserBase], _plugin: S3PPlugin, driver: WebDriver, refer: S3PRefer, max_document: int,
+    def run_payload(self, payload: Type[S3PParserBase], _plugin: S3PPlugin, driver: WebDriver, refer: S3PRefer,
+                    max_document: int, url: str, categories: list,
                     timeout: int = 2):
         # !WARNING Требуется изменить путь до актуального парсера плагина
-        from src.s3_platform_plugin_template.template_payload import MyTemplateParser
-        if isinstance(payload, type(MyTemplateParser)):
-            _payload = payload(refer=refer, plugin=_plugin, web_driver=driver, max_count_documents=max_document, last_document=None)
+        from src.s3p_plugin_parser_ieee.ieee import IEEE
+        if isinstance(payload, type(IEEE)):
+            _payload = payload(refer=refer, plugin=_plugin, web_driver=driver, max_count_documents=max_document,
+                               last_document=None, url=url, categories=categories)
 
-            @execute_timeout(timeout)
+            # @execute_timeout(timeout)
             def execute() -> tuple[S3PDocument, ...]:
                 return _payload.content()
 
