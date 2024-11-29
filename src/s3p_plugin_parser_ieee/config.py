@@ -31,10 +31,8 @@ config = PluginConfig(
     middleware=MiddlewareConfig(
         modules=[
             modules.TimezoneSafeControlConfig(order=1, is_critical=True),
-            modules.CutJunkCharactersFromDocumentTextConfig(order=2, is_critical=True,
-                                                            p_fields=['text', 'abstract']),
-            modules.FilterOnlyNewDocumentWithDB(order=3, is_critical=True),
-            modules.SaveDocument(order=4, is_critical=True),
+            modules.FilterOnlyNewDocumentWithDB(order=2, is_critical=True),
+            modules.SaveDocument(order=3, is_critical=True),
         ],
         bus=None,
     ),
@@ -45,7 +43,7 @@ config = PluginConfig(
         entry=payload.entry.EntryConfig(
             method='content',
             params=[
-                payload.entry.ModuleParamConfig(key='driver', module_name=WebDriver, bus=True),
+                payload.entry.ModuleParamConfig(key='web_driver', module_name=WebDriver, bus=True),
                 payload.entry.ConstParamConfig(key='max_count_documents', value=50),
                 payload.entry.ConstParamConfig(key='url',
                                                value='https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest'),
