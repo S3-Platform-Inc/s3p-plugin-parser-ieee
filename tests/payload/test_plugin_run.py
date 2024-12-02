@@ -25,11 +25,16 @@ class TestPayloadRun:
     def chrome_driver(self) -> WebDriver:
         options = webdriver.Options()
 
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('window-size=1920x1080')
-        options.add_argument("disable-gpu")
+        options.add_argument('--no-sandbox')  # Disable sandboxing, which is not suitable for Docker
+        options.add_argument('--headless')  # Run in headless mode
+        options.add_argument('--disable-dev-shm-usage')  # Disable shared memory usage, which can cause issues in Docker
+        options.add_argument('--disable-gpu')  # Disable GPU acceleration, which is not necessary in a Docker container
+        options.add_argument('--window-size=1920,1080')  # Set a default window size
+        # options.add_argument('--remote-debugging-port=9222')  # Allow remote debugging
+        options.add_argument('--disable-extensions')  # Disable extensions, which can cause issues
+        options.add_argument('--disable-default-apps')  # Disable default apps, which can cause issues
+        # options.add_argument('--proxy-server="direct://"')  # Disable proxy server
+        # options.add_argument('--proxy-bypass-list=*')  # Bypass proxy for all destinations
         driver = Chrome(options=options)
         yield driver
         driver.quit()
@@ -80,19 +85,61 @@ class TestPayloadRun:
     def test_run_with_0_docs_restriction(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin):
         # !WARNING Обновить тест для актуального парсера
         max_docs = 10
-        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, max_docs)
+        url = 'https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest'
+        categories = ["Computational and artificial intelligence",
+                      "Computers and information processing",
+                      "Communications technology",
+                      "Industry applications",
+                      "Vehicular and wireless technologies",
+                      "Systems engineering and theory",
+                      "Intelligent transportation systems",
+                      "Information theory",
+                      "Electronic design automation and methodology",
+                      "Education",
+                      "Social implications of technology"
+                      ]
+        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, max_docs, url=url,
+                                categories=categories)
         assert len(docs) <= max_docs
 
     def test_return_types(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin):
         # !WARNING Обновить тест для актуального парсера
         max_docs = 10
-        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, max_docs)
+        url = 'https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest'
+        categories = ["Computational and artificial intelligence",
+                      "Computers and information processing",
+                      "Communications technology",
+                      "Industry applications",
+                      "Vehicular and wireless technologies",
+                      "Systems engineering and theory",
+                      "Intelligent transportation systems",
+                      "Information theory",
+                      "Electronic design automation and methodology",
+                      "Education",
+                      "Social implications of technology"
+                      ]
+        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, max_docs, url=url,
+                                categories=categories)
         assert isinstance(docs, tuple) and all([isinstance(el, S3PDocument) for el in docs])
 
     def test_returned_parameters_are_sufficient(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin):
         # !WARNING Обновить тест для актуального парсера
         max_docs = 10
-        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, max_docs)
+        url = 'https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest'
+        categories = ["Computational and artificial intelligence",
+                      "Computers and information processing",
+                      "Communications technology",
+                      "Industry applications",
+                      "Vehicular and wireless technologies",
+                      "Systems engineering and theory",
+                      "Intelligent transportation systems",
+                      "Information theory",
+                      "Electronic design automation and methodology",
+                      "Education",
+                      "Social implications of technology"
+                      ]
+        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, max_docs, url=url,
+                                categories=categories)
         for el in docs:
             assert el.title is not None and isinstance(el.title, str)
             assert el.link is not None and isinstance(el.link, str)
