@@ -13,7 +13,7 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.ie.webdriver import WebDriver
 
 from tests.config.fixtures import fix_plugin_config, project_config
-from tests.payload.fixtures import execute_timeout
+# from tests.payload.fixtures import execute_timeout
 from s3p_sdk.types import S3PRefer, S3PDocument, S3PPlugin
 from s3p_sdk.plugin.types import SOURCE
 
@@ -61,13 +61,28 @@ class TestPayloadRun:
         return parser_class
 
     def run_payload(self, payload: Type[S3PParserBase], _plugin: S3PPlugin, driver: WebDriver, refer: S3PRefer, max_document: int,
-                    timeout: int = 2):
+                    timeout: int = 2, url: str, categories: list):
         # !WARNING Требуется изменить путь до актуального парсера плагина
-        from src.s3_platform_plugin_template.template_payload import MyTemplateParser
-        if isinstance(payload, type(MyTemplateParser)):
-            _payload = payload(refer=refer, plugin=_plugin, web_driver=driver, max_count_documents=max_document, last_document=None)
+        from src.s3p_plugin_parser_ieee.ieee import IEEE
+        if isinstance(payload, type(IEEE)):
 
-            @execute_timeout(timeout)
+            url = 'https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest'
+            categories = ["Computational and artificial intelligence",
+                          "Computers and information processing",
+                          "Communications technology",
+                          "Industry applications",
+                          "Vehicular and wireless technologies",
+                          "Systems engineering and theory",
+                          "Intelligent transportation systems",
+                          "Information theory",
+                          "Electronic design automation and methodology",
+                          "Education",
+                          "Social implications of technology"
+                          ]
+
+            _payload = payload(refer=refer, plugin=_plugin, web_driver=driver, max_count_documents=max_document, last_document=None, url = url, categories = categories)
+
+            # @execute_timeout(timeout)
             def execute() -> tuple[S3PDocument, ...]:
                 return _payload.content()
 
