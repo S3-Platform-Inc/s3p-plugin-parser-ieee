@@ -7,7 +7,8 @@ from s3p_sdk.plugin.config import (
     trigger,
     MiddlewareConfig,
     modules,
-    payload
+    payload,
+    RestrictionsConfig
 )
 from s3p_sdk.plugin.types import SOURCE
 from s3p_sdk.module import (
@@ -20,7 +21,13 @@ config = PluginConfig(
         type=SOURCE,  # Тип источника (SOURCE, ML, PIPELINE)
         files=['ieee.py', ],
         # Список файлов, которые будут использоваться в плагине (эти файлы будут сохраняться в платформе)
-        is_localstorage=False
+        is_localstorage=False,
+        restrictions=RestrictionsConfig(
+            maximum_materials=None,
+            to_last_material=None,
+            from_date=datetime.datetime(2024, 8, 1),
+            to_date=None,
+        )
     ),
     task=TaskConfig(
         trigger=trigger.TriggerConfig(
@@ -31,20 +38,17 @@ config = PluginConfig(
     middleware=MiddlewareConfig(
         modules=[
             modules.TimezoneSafeControlConfig(order=1, is_critical=True),
-            modules.FilterOnlyNewDocumentWithDB(order=2, is_critical=True),
-            modules.SaveDocument(order=3, is_critical=True),
+            modules.SaveOnlyNewDocuments(order=2, is_critical=True),
         ],
         bus=None,
     ),
     payload=payload.PayloadConfig(
         file='ieee.py',
-        # python файл плагина (точка входа). Этот файл должен быть указан в `plugin.files[*]`
         classname='IEEE',  # имя python класса в указанном файле
         entry=payload.entry.EntryConfig(
             method='content',
             params=[
                 payload.entry.ModuleParamConfig(key='web_driver', module_name=WebDriver, bus=True),
-                payload.entry.ConstParamConfig(key='max_count_documents', value=50),
                 payload.entry.ConstParamConfig(key='url',
                                                value='https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest'),
                 payload.entry.ConstParamConfig(key='categories',
