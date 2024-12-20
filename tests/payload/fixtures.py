@@ -1,3 +1,6 @@
+import pytest
+
+
 # import signal
 #
 #
@@ -18,3 +21,22 @@
 #         return wrapper
 #
 #     return decorator
+
+@pytest.fixture(scope="module")
+def plugin_custom_params() -> dict:
+    return {
+        'url': 'https://ieeexplore.ieee.org/xpl/tocresult.jsp?isnumber=10005208&punumber=6287639&sortType=vol-only-newest',
+        'categories': [
+            "Computational and artificial intelligence",
+            "Computers and information processing",
+            "Communications technology",
+            "Industry applications",
+            "Vehicular and wireless technologies",
+            "Systems engineering and theory",
+            "Intelligent transportation systems",
+            "Information theory",
+            "Electronic design automation and methodology",
+            "Education",
+            "Social implications of technology"
+        ]
+    }
