@@ -1,8 +1,7 @@
 import datetime
 import importlib.util
 import os
-from typing import Type
-import sys
+from typing import Callable, Union
 
 import pytest
 from pathlib import Path
@@ -13,7 +12,6 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.ie.webdriver import WebDriver
 
 from tests.config.fixtures import fix_plugin_config, project_config
-from tests.payload.fixtures import plugin_custom_params
 from s3p_sdk.types import S3PRefer, S3PDocument, S3PPlugin, S3PPluginRestrictions
 from s3p_sdk.plugin.types import SOURCE
 
@@ -25,7 +23,7 @@ class TestPayloadRun:
     def chrome_driver(self) -> WebDriver:
         options = webdriver.Options()
 
-        # options.add_argument('--headless')
+        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')  # Disable GPU acceleration, which is not necessary in a Docker container
@@ -45,8 +43,8 @@ class TestPayloadRun:
         return S3PPlugin(1, 'unittests/repo/1', True, None, None, SOURCE, "3.0")
 
     @pytest.fixture(scope="module", autouse=True)
-    def fix_payload(self, project_config, fix_plugin_config) -> Type[S3PParserBase]:
-        MODULE_NAME: str = 's3p_test_plugin_payload'
+    def fix_payload(self, project_config, fix_plugin_config) -> S3PParserBase:
+        MODULE_NAME: str = 's3p_plugin_parser_ieee'
         """Загружает конфигурацию из config.py файла по динамическому пути на основании конфигурации"""
         payload_path = Path(project_config.root) / 'src' / project_config.name / fix_plugin_config.payload.file
         assert os.path.exists(payload_path)
@@ -62,23 +60,26 @@ class TestPayloadRun:
         assert issubclass(parser_class, S3PParserBase), f"{class_name} is not a subclass of S3PParserBase."
         return parser_class
 
-    def run_payload(self, payload: Type[S3PParserBase], _plugin: S3PPlugin, driver: WebDriver, refer: S3PRefer,
-                    restrictions: S3PPluginRestrictions, url: str, categories: list,
-                    timeout: int = 2):
-        # !WARNING Требуется изменить путь до актуального парсера плагина
-        from src.s3p_plugin_parser_ieee.ieee import IEEE
-        if isinstance(payload, type(IEEE)):
-            _payload = payload(refer=refer, plugin=_plugin, web_driver=driver, restrictions=restrictions, url=url, categories=categories)
+    def run_payload(self, payload: Union[S3PParserBase, Callable], refer: S3PRefer, _plugin: S3PPlugin, restrictions: S3PPluginRestrictions, driver: WebDriver, params):
 
-            # @execute_timeout(timeout)
-            def execute() -> tuple[S3PDocument, ...]:
-                return _payload.content()
+        _params = {}
+        for param in params:
+            if param.typeof == 'const':
+                _params[param.key] = param.value
 
-            return execute()
-        else:
-            assert False, "Тест проверяет payload плагина"
 
-    def test_all_cases_with_once_executing_parser(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin, plugin_custom_params):
+        _payload = payload(
+            refer=refer,
+            plugin=_plugin,
+            restrictions=restrictions,
+            web_driver=driver,
+            **_params,
+        )
+        return _payload.content()
+
+    # !WARNING: Изменить максимальное время работы плагина из логических соображений
+    @pytest.mark.timeout(100)
+    def test_all_cases_with_once_executing_parser(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin, fix_plugin_config):
         """
         Test Case
 
@@ -91,7 +92,7 @@ class TestPayloadRun:
 
         """
         max_docs = 4
-        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, S3PPluginRestrictions(max_docs, None, None, None), plugin_custom_params.get('url'), plugin_custom_params.get('categories'), 100)
+        docs = self.run_payload(fix_payload, fix_s3pRefer, fix_s3pPlugin, S3PPluginRestrictions(max_docs, None, None, None), chrome_driver, fix_plugin_config.payload.entry.params)
 
         # 1. Количество материалов должно быть не меньше параметра максимального числа материалов.
         assert len(docs) == max_docs, f"Payload вернул {len(docs)} материалов. А должен был {max_docs}"
@@ -106,9 +107,10 @@ class TestPayloadRun:
             assert el.published is not None and isinstance(el.published, datetime.datetime), f"Документ {el} должен обязательно содержать ключевое поле published"
             assert el.hash
 
-    def test_date_restrictions(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin, plugin_custom_params):
-        _boundary_date = datetime.datetime(2024, 12, 17)
-        docs = self.run_payload(fix_payload, fix_s3pPlugin, chrome_driver, fix_s3pRefer, S3PPluginRestrictions(None, None, _boundary_date, None), plugin_custom_params.get('url'), plugin_custom_params.get('categories'), 100)
+    @pytest.mark.timeout(100)
+    def test_date_restrictions(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin, fix_plugin_config):
+        _boundary_date = datetime.datetime.now()
+        docs = self.run_payload(fix_payload, fix_s3pRefer, fix_s3pPlugin, S3PPluginRestrictions(None, None, _boundary_date, None), chrome_driver, fix_plugin_config.payload.entry.params)
 
         for doc in docs:
             assert doc.published >= _boundary_date, f"The {doc.to_logging} must meet the restriction (older than {_boundary_date})"
