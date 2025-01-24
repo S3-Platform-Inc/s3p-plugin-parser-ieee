@@ -3,8 +3,10 @@ import pytz
 import datetime
 import time
 
+from s3p_sdk.exceptions.parser import S3PPluginParserOutOfRestrictionException, S3PPluginParserFinish
 from s3p_sdk.plugin.payloads.parsers import S3PParserBase
-from s3p_sdk.types import S3PRefer, S3PDocument, S3PPlugin
+from s3p_sdk.types import S3PRefer, S3PDocument, S3PPlugin, S3PPluginRestrictions
+from s3p_sdk.types.plugin_restrictions import FROM_DATE
 from selenium.common import NoSuchElementException
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.by import By
@@ -17,9 +19,8 @@ class IEEE(S3PParserBase):
     A Parser payload that uses S3P Parser base class.
     """
 
-    def __init__(self, refer: S3PRefer, plugin: S3PPlugin, web_driver: WebDriver, max_count_documents: int = None,
-                 last_document: S3PDocument = None, url: str = None, categories: tuple | list = None):
-        super().__init__(refer, plugin, max_count_documents, last_document)
+    def __init__(self, refer: S3PRefer, plugin: S3PPlugin, web_driver: WebDriver, restrictions: S3PPluginRestrictions, url: str = None, categories: tuple | list = None):
+        super().__init__(refer, plugin, restrictions)
 
         # Тут должны быть инициализированы свойства, характерные для этого парсера. Например: WebDriver
         self._driver = web_driver
@@ -149,7 +150,14 @@ class IEEE(S3PParserBase):
             except Exception as e:
                 self.logger.debug(f'There aren\'t the keywords in the page: {e}')
 
-            self._find(document)
+            try:
+                self._find(document)
+            except S3PPluginParserOutOfRestrictionException as e:
+                if e.restriction == FROM_DATE:
+                    self.logger.debug(f'Document is out of date range `{self._restriction.from_date}`')
+                    raise S3PPluginParserFinish(self._plugin,
+                                                f'Document is out of date range `{self._restriction.from_date}`',
+                                                e)
 
     def _initial_access_source(self, url: str, delay: int = 2):
         self._driver.get(url)
