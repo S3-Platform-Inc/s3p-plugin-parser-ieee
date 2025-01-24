@@ -1,8 +1,13 @@
 # IEEE (S3 Platform Plugin)
 
-[![Test Plugin](https://github.com/S3-Platform-Inc/s3p-plugin-parser-ieee/actions/workflows/plugin_test.yml/badge.svg)](https://github.com/S3-Platform-Inc/s3p-plugin-parser-ieee/actions/workflows/plugin_test.yml)
-[![Release plugin](https://github.com/S3-Platform-Inc/s3p-plugin-parser-ieee/actions/workflows/build-release.yml/badge.svg)](https://github.com/S3-Platform-Inc/s3p-plugin-parser-ieee/actions/workflows/build-release.yml)
-[![Sync plugin to S3](https://github.com/S3-Platform-Inc/s3p-plugin-parser-ieee/actions/workflows/sync-release.yml/badge.svg)](https://github.com/S3-Platform-Inc/s3p-plugin-parser-ieee/actions/workflows/sync-release.yml)
+[![Test Plugin](https://github.com/S3-Platform-Inc/s3-platform-plugin-template/actions/workflows/plugin_test.yml/badge.svg)](https://github.com/S3-Platform-Inc/s3-platform-plugin-template/actions/workflows/plugin_test.yml)
+[![Release plugin](https://github.com/S3-Platform-Inc/s3-platform-plugin-template/actions/workflows/build-release.yml/badge.svg)](https://github.com/S3-Platform-Inc/s3-platform-plugin-template/actions/workflows/build-release.yml)
+[![Sync plugin to S3](https://github.com/S3-Platform-Inc/s3-platform-plugin-template/actions/workflows/sync-release.yml/badge.svg)](https://github.com/S3-Platform-Inc/s3-platform-plugin-template/actions/workflows/sync-release.yml)
+
+> [!WARNING]
+> В документации к плагину используются GitHub Badges - это динамические шильдики, которые в этом кейсе показывают статус работы Github Actions.
+> Необходимо обновить ссылки в шильдиках. Заменить `s3-platform-plugin-template` на `название репозитория плагина`.
+> _Удалить это напоминание из readme.md 
 
 
 > [!NOTE]
@@ -229,7 +234,7 @@ class MyTemplateParser(S3PParserBase):
     def __init__(self, refer: S3PRefer, plugin: S3PPlugin, restrictions: S3PPluginRestrictions, web_driver: WebDriver):
         """
         Constructor for the parser plugin.
-        
+  
         Required parameters (passed by the platform):
         :param refer: S3PRefer - the source processed by the plugin.
         :param plugin: S3PPlugin - plugin metadata.
