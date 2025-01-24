@@ -23,7 +23,7 @@ class TestPayloadRun:
     def chrome_driver(self) -> WebDriver:
         options = webdriver.Options()
 
-        # options.add_argument('--headless')
+        options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')  # Disable GPU acceleration, which is not necessary in a Docker container
@@ -108,9 +108,9 @@ class TestPayloadRun:
             assert el.hash
 
     @pytest.mark.timeout(100)
-    def test_date_restrictions(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin):
-        _boundary_date = datetime.datetime.now() - datetime.timedelta(days=2)
-        docs = self.run_payload(fix_payload, fix_s3pRefer, fix_s3pPlugin, S3PPluginRestrictions(None, None, _boundary_date, None), chrome_driver)
+    def test_date_restrictions(self, chrome_driver, fix_s3pRefer, fix_payload, fix_s3pPlugin, fix_plugin_config):
+        _boundary_date = datetime.datetime.now()
+        docs = self.run_payload(fix_payload, fix_s3pRefer, fix_s3pPlugin, S3PPluginRestrictions(None, None, _boundary_date, None), chrome_driver, fix_plugin_config.payload.entry.params)
 
         for doc in docs:
             assert doc.published >= _boundary_date, f"The {doc.to_logging} must meet the restriction (older than {_boundary_date})"
