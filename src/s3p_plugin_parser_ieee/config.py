@@ -7,7 +7,8 @@ from s3p_sdk.plugin.config import (
     trigger,
     MiddlewareConfig,
     modules,
-    payload, RestrictionsConfig
+    payload,
+    RestrictionsConfig
 )
 from s3p_sdk.plugin.types import SOURCE
 from s3p_sdk.module import (
@@ -24,7 +25,7 @@ config = PluginConfig(
         restrictions=RestrictionsConfig(
             maximum_materials=50,
             to_last_material=None,
-            from_date=None,
+            from_date=datetime.datetime(2024, 8, 1),
             to_date=None,
         )
     ),
@@ -37,16 +38,12 @@ config = PluginConfig(
     middleware=MiddlewareConfig(
         modules=[
             modules.TimezoneSafeControlConfig(order=1, is_critical=True),
-            modules.CutJunkCharactersFromDocumentTextConfig(order=2, is_critical=True,
-                                                            p_fields=['text', 'abstract']),
-            modules.FilterOnlyNewDocumentWithDB(order=3, is_critical=True),
-            modules.SaveDocument(order=4, is_critical=True),
+            modules.SaveOnlyNewDocuments(order=2, is_critical=True),
         ],
         bus=None,
     ),
     payload=payload.PayloadConfig(
         file='ieee.py',
-        # python файл плагина (точка входа). Этот файл должен быть указан в `plugin.files[*]`
         classname='IEEE',  # имя python класса в указанном файле
         entry=payload.entry.EntryConfig(
             method='content',

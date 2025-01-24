@@ -19,7 +19,7 @@ class IEEE(S3PParserBase):
     A Parser payload that uses S3P Parser base class.
     """
 
-    def __init__(self, refer: S3PRefer, plugin: S3PPlugin, web_driver: WebDriver, restrictions: S3PPluginRestrictions, url: str = None, categories: tuple | list = None):
+    def __init__(self, refer: S3PRefer, plugin: S3PPlugin, restrictions: S3PPluginRestrictions, web_driver: WebDriver, url: str = None, categories: tuple | list = None):
         super().__init__(refer, plugin, restrictions)
 
         # Тут должны быть инициализированы свойства, характерные для этого парсера. Например: WebDriver
@@ -98,7 +98,7 @@ class IEEE(S3PParserBase):
             _title = self._driver.find_element(By.CLASS_NAME, 'document-title').text  # Title: Обязательное поле
             pub_date_text = self._driver.find_element(By.CLASS_NAME, 'doc-abstract-pubdate').text.replace(
                 'Date of Publication: ', '')
-            _published = self.UTC.localize(dateparser.parse(pub_date_text))
+            _published = dateparser.parse(pub_date_text)
             _weblink = url
         except Exception as e:
             raise NoSuchElementException(
@@ -156,8 +156,7 @@ class IEEE(S3PParserBase):
                 if e.restriction == FROM_DATE:
                     self.logger.debug(f'Document is out of date range `{self._restriction.from_date}`')
                     raise S3PPluginParserFinish(self._plugin,
-                                                f'Document is out of date range `{self._restriction.from_date}`',
-                                                e)
+                                                f'Document is out of date range `{self._restriction.from_date}`', e)
 
     def _initial_access_source(self, url: str, delay: int = 2):
         self._driver.get(url)

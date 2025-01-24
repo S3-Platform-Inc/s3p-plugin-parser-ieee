@@ -26,8 +26,10 @@ class TestPayloadRun:
         # options.add_argument('--headless')
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('window-size=1920x1080')
-        options.add_argument("disable-gpu")
+        options.add_argument('--disable-gpu')  # Disable GPU acceleration, which is not necessary in a Docker container
+        options.add_argument('--window-size=1920,1080')  # Set a default window size
+        options.add_argument('--disable-extensions')  # Disable extensions, which can cause issues
+        options.add_argument('--disable-default-apps')  # Disable default apps, which can cause issues
         driver = Chrome(options=options)
         yield driver
         driver.quit()
